@@ -94,7 +94,7 @@ def sentence3() -> Expr:
     born0 = PropSymbolExpr("PacmanBorn", time=0)
     killed0 = PropSymbolExpr("PacmanKilled", time=0)
     law1 = alive1 % ((alive0 & ~killed0) |  (~alive0 & born0))
-    law2 = (alive0 >> ~born0) & (born0 >> ~alive0) 
+    law2 = ~(alive0 & born0) #  (alive0 >> ~born0) & (born0 >> ~alive0) 
     law3 = born0
     return conjoin([law1, law2, law3])
     util.raiseNotDefined()
@@ -114,7 +114,8 @@ def findModelUnderstandingCheck() -> Dict[Expr, bool]:
     a = Expr('A')
     "*** BEGIN YOUR CODE HERE ***"
     print("a.__dict__ is:", a.__dict__) # might be helpful for getting ideas
-    return {'a': True}
+    a.op = 'a'
+    return {a: True}
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
@@ -136,7 +137,10 @@ def plTrueInverse(assignments: Dict[Expr, bool], inverse_statement: Expr) -> boo
     pl_true may be useful here; see logic.py for its description.
     """
     "*** BEGIN YOUR CODE HERE ***"
-    return pl_true(~inverse_statement, assignments) #and not pl_true(inverse_statement, assignments)
+    if findModel(~inverse_statement) == assignments:
+        return pl_true(~inverse_statement, assignments) 
+    else:
+        return False
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
