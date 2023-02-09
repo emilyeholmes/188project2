@@ -350,16 +350,10 @@ def checkLocationSatisfiability(x1_y1: Tuple[int, int], x0_y0: Tuple[int, int], 
     KB.append(pacphysicsAxioms(0, all_coords, non_outer_wall_coords, walls_grid, None, allLegalSuccessorAxioms))
     KB.append(PropSymbolExpr(pacman_str, x0, y0, time = 0))
     KB.append(PropSymbolExpr(action0, time = 0))
-    KB.append(PropSymbolExpr(action1, time = 0))
+    KB.append(PropSymbolExpr(action1, time = 1))
 
-    # query1 = KB >> PropSymbolExpr(pacman_str, x1, y1, time=1)
-    #model1 = findModel(disjoin([disjoin([~x for x in KB]), PropSymbolExpr(pacman_str, x1, y1, time=1)]))
-    #model1 = findModel(to_cnf(conjoin(KB) >> PropSymbolExpr(pacman_str, x1, y1, time = 1)))
-    print(model1)
-    model1 = findModel(conjoin[KB])
-    # query2 = conjoin([KB]) >> ~PropSymbolExpr(pacman_str, x1, y1, time=1)
-    #model2 = findModel(disjoin([disjoin([~x for x in KB]), PropSymbolExpr(pacman_str, x1, y1, time=1)]))
-    #model2= findModel(to_cnf(conjoin(KB) >> ~PropSymbolExpr(pacman_str, x1, y1, time = 1)))
+    model1 = findModel(PropSymbolExpr(pacman_str, x1, y1, time=1) & conjoin([x for x in KB]))
+    model2 = findModel(~PropSymbolExpr(pacman_str, x1, y1, time=1) & conjoin([x for x in KB]))
     return (model1, model2)
     "*** END YOUR CODE HERE ***"
 
@@ -387,7 +381,20 @@ def positionLogicPlan(problem) -> List:
     KB = []
 
     "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    KB.append(PropSymbolExpr(pacman_str, x0, y0 ,time = 0))
+    for t in range(50):
+        print(t)
+        pacmanAtSquare = [PropSymbolExpr(pacman_str, x, y, time=t) for x,y in non_wall_coords]
+        KB.append(exactlyOne(pacmanAtSquare))
+        model = findModel(conjoin(KB) & PropSymbolExpr(pacman_str, xg, yg, time = t))
+        if model:
+            return extractActionSequence(model, actions)
+        pacmanMadeMove = [PropSymbolExpr(action, time=t) for action in DIRECTIONS]
+        KB.append(exactlyOne(pacmanMadeMove))
+        lst = [pacmanSuccessorAxiomSingle(x, y, t+1, walls_grid) for x,y in non_wall_coords]
+        for i in lst:
+            KB.append(i)
+        
     "*** END YOUR CODE HERE ***"
 
 #______________________________________________________________________________
