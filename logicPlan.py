@@ -423,7 +423,29 @@ def foodLogicPlan(problem) -> List:
     KB = []
 
     "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    KB.append(PropSymbolExpr(pacman_str, x0, y0 ,time = 0))
+    foodSuccessorAxiom = lambda x, y, t: PropSymbolExpr(food_str, x, y, time=t+1) % (PropSymbolExpr(food_str, x, y, time=t) & ~PropSymbolExpr(pacman_str, x, y, time=t))
+    initialFood = [PropSymbolExpr(food_str, x, y, time=0) for x,y, in food]
+    for i in initialFood:
+        KB.append(i)
+    for t in range(50):
+        print(t)
+        pacmanAtSquare = [PropSymbolExpr(pacman_str, x, y, time=t) for x,y in non_wall_coords]
+        KB.append(exactlyOne(pacmanAtSquare))
+
+        foodAtSquare = [foodSuccessorAxiom(x,y,t) for x,y in food]
+        for i in foodAtSquare:
+            KB.append(i)
+        
+        model = findModel(conjoin(KB) & conjoin([~PropSymbolExpr(food_str, x, y, time=t) for x,y in food]))
+        if model:
+            return extractActionSequence(model, actions)
+
+        pacmanMadeMove = [PropSymbolExpr(action, time=t) for action in DIRECTIONS]
+        KB.append(exactlyOne(pacmanMadeMove))
+        lst = [pacmanSuccessorAxiomSingle(x, y, t+1, walls) for x,y in non_wall_coords]
+        for i in lst:
+            KB.append(i)
     "*** END YOUR CODE HERE ***"
 
 #______________________________________________________________________________
