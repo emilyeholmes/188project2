@@ -562,12 +562,33 @@ def slam(problem, agent) -> Generator:
             outer_wall_sent.append(PropSymbolExpr(wall_str, x, y))
     KB.append(conjoin(outer_wall_sent))
 
-    "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    KB.append(PropSymbolExpr(pacman_str, pac_x_0, pac_y_0, time = 0))
+    known_map[pac_x_0][pac_y_0] = 0
+    KB.append(~PropSymbolExpr(wall_str, pac_x_0, pac_y_0))
 
     for t in range(agent.num_timesteps):
+        KB.append(pacphysicsAxioms(t, all_coords, non_outer_wall_coords, known_map, SLAMSensorAxioms, SLAMSuccessorAxioms))
+        KB.append(PropSymbolExpr(agent.actions[t], time=t))
+        KB.append(numAdjWallsPerceptRules(t, agent.getPercepts()))
 
-        "*** END YOUR CODE HERE ***"
+        for x,y in non_outer_wall_coords: 
+            if entails(conjoin(KB), PropSymbolExpr(wall_str, x, y)):
+                KB.append(PropSymbolExpr(wall_str, x, y))
+                known_map[x][y] = 1
+            elif entails(conjoin(KB), ~PropSymbolExpr(wall_str, x, y)):
+                KB.append(~PropSymbolExpr(wall_str, x, y))
+                known_map[x][y] = 0
+
+        possible_locations = []
+        for x,y in non_outer_wall_coords: 
+            if findModel(conjoin(KB) & PropSymbolExpr(pacman_str, x, y, time=t)):
+                possible_locations.append((x,y))
+            if entails(conjoin(KB), PropSymbolExpr(pacman_str, x, y, time=t)):
+                KB.append(PropSymbolExpr(pacman_str, x, y, time = t))
+            if entails(conjoin(KB), ~PropSymbolExpr(pacman_str, x, y, time=t)):
+                KB.append(~PropSymbolExpr(pacman_str, x, y, time=t))
+
+        agent.moveToNextState(agent.actions[t])
         yield (known_map, possible_locations)
 
 
